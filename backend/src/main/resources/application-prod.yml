@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════════════════════
+# TEGA PRIVÉ — Production profile
+# Activated with: --spring.profiles.active=prod
+# All secrets MUST come from environment variables.
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${TP_DB_HOST}:${TP_DB_PORT}/${TP_DB_NAME}
+    username: ${TP_DB_USERNAME}
+    password: ${TP_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: TegaPrivePool
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc.batch_size: 25
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+  flyway:
+    enabled: true
+    out-of-order: false     # never allow out-of-order migrations in prod
+
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/javascript,text/html,text/css
+    min-response-size: 1024
+  http2:
+    enabled: true
+  servlet:
+    session:
+      timeout: 0            # stateless — no server-side sessions
+
+# Security: set strong secrets from environment only
+tp:
+  jwt:
+    secret: ${TP_JWT_SECRET}            # minimum 64-char random secret in prod
+    access-expiration-min: 15           # shorter access token lifetime in prod
+    refresh-expiration-days: 7
+  cors:
+    allowed-origins: ${TP_CORS_ALLOWED_ORIGINS}
+
+# Stricter logging in production
+logging:
+  level:
+    com.tegaprive: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  file:
+    name: /var/log/tegaprive/app.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30
